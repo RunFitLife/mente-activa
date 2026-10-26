@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mente activa</title>
+<style>
+:root{--bg:#f6f3ec;--fg:#1f2a37;--card:#fff;--line:#d9d2c3;--ac:#2b6cb0;--acfg:#fff;--ok:#2f855a;--okbg:#e3f4ea;--mut:#5b6573;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#14181f;--fg:#e8edf3;--card:#1e2530;--line:#3a4452;--ac:#63b3ed;--acfg:#0b1220;--ok:#68d391;--okbg:#1f3a2c;--mut:#a0aec0}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#14181f;--fg:#e8edf3;--card:#1e2530;--line:#3a4452;--ac:#63b3ed;--acfg:#0b1220;--ok:#68d391;--okbg:#1f3a2c;--mut:#a0aec0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:22px/1.4 system-ui,"Segoe UI",Roboto,sans-serif}
+#app{max-width:680px;margin:0 auto;padding:16px}
+h1{font-size:32px;margin:8px 0}h2{font-size:21px;color:var(--mut);margin:24px 0 8px}
+.mut{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.tile{background:var(--card);color:var(--fg);border:2px solid var(--line);border-radius:18px;padding:14px;font:inherit;text-align:center;min-height:100px;cursor:pointer}
+.tile b{display:block;font-size:36px}
+.btn{display:block;width:100%;margin:12px 0;padding:18px;font:inherit;font-size:24px;font-weight:600;background:var(--ac);color:var(--acfg);border:0;border-radius:16px;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--fg);border:2px solid var(--line)}
+.lnk{background:none;border:0;font:inherit;color:var(--ac);padding:10px 0;cursor:pointer}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--mut)}
+.t{text-align:center;color:var(--mut);margin-top:16px}
+.q{font-size:34px;text-align:center;margin:22px 0;font-weight:600}
+.fb{min-height:42px;text-align:center;font-size:24px;margin:8px 0}
+.opt{display:block;width:100%;margin:10px 0;padding:18px;font:inherit;font-size:28px;background:var(--card);color:var(--fg);border:2px solid var(--line);border-radius:16px;cursor:pointer}
+.opt.good{background:var(--okbg);border-color:var(--ok)}.opt.dim{opacity:.4}
+.stars{font-size:56px;text-align:center;margin-top:20px}
+.cards{display:grid;gap:10px;margin-top:12px}
+.mem{aspect-ratio:1;font-size:44px;background:var(--card);color:var(--fg);border:2px solid var(--line);border-radius:16px;cursor:pointer}
+.mem.up{background:var(--okbg)}.mem.ok{border-color:var(--ok);background:var(--okbg)}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.pad{border:0;border-radius:22px;min-height:130px;opacity:.5;transition:opacity .15s}
+.pad.on{opacity:1;filter:brightness(1.3)}
+.row{padding:10px 0;border-bottom:1px solid var(--line);font-size:19px}
+.foot{font-size:16px;color:var(--mut);margin-top:30px;text-align:center}
+.logo{display:flex;align-items:center;gap:14px;margin:8px 0}.logo h1{margin:0}.logo svg{flex:none}
+.mood{display:flex;gap:10px;justify-content:center;margin:8px 0}.mood button{font-size:34px;background:none;border:2px solid var(--line);border-radius:14px;padding:6px 12px;cursor:pointer}
+.ph{display:block;max-width:100%;max-height:50vh;margin:12px auto;border-radius:16px}
+.inp{width:100%;box-sizing:border-box;font:inherit;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg)}
+.say{float:right;font-size:28px;background:none;border:0;cursor:pointer}
+.odd{display:grid;gap:8px;margin-top:12px}.odd button{aspect-ratio:1;font-size:36px;color:var(--fg);background:var(--card);border:2px solid var(--line);border-radius:14px;cursor:pointer}.odd button.sel{background:var(--okbg);border-color:var(--ac)}.odd button.ok{background:var(--okbg);border-color:var(--ok)}
+</style></head><body><div id="app"></div>
+<script>
+const app=document.getElementById('app');
+let store={levels:{},log:[]};
+try{const s=localStorage.getItem('mente-v1');if(s)store=JSON.parse(s)}catch(e){}
+function save(){try{localStorage.setItem('mente-v1',JSON.stringify(store))}catch(e){}}
+store.set=store.set||{fs:1,voice:0};
+let FO=[];try{FO=JSON.parse(localStorage.getItem('mente-fotos')||'[]')}catch(e){}
+function saveF(){try{localStorage.setItem('mente-fotos',JSON.stringify(FO));return 1}catch(e){return 0}}
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[rnd(0,a.length-1)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const today=()=>new Date().toLocaleDateString('sv');
+let V=0;
+function h(t,c,x,f){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.innerHTML=x;if(f)e.onclick=f;return e}
+const btn=(t,f,c)=>h('button','btn '+(c||''),t,f);
+const show=(...e)=>{app.style.zoom=store.set.fs;app.replaceChildren(...e)};
+function topbar(r){const d=h('div','top');d.append(h('button','lnk','← Inicio',()=>home()),h('span','',r||''));return d}
+function numOpts(a,sp){const s=new Set([a]);let g=0;while(s.size<3&&g++<60){const v=a+rnd(-sp,sp);if(v>=0)s.add(v)}return shuf([...s]).map(String)}
+const eur=c=>(c/100).toFixed(2).replace('.',',')+' €';
+
+/* ---------- Generadores ---------- */
+function genSuma(l){const m=[10,30,100,300,1000][l-1],a=rnd(1,m),b=rnd(1,m);return{t:'Calcula la suma',q:a+' + '+b+' = ?',o:numOpts(a+b,[3,5,10,20,50][l-1]),a:String(a+b)}}
+function genResta(l){const m=[10,30,100,300,1000][l-1],a=rnd(Math.ceil(m/3),m),b=rnd(1,a);return{t:'Calcula la resta',q:a+' − '+b+' = ?',o:numOpts(a-b,[3,5,10,20,50][l-1]),a:String(a-b)}}
+function genCambio(l){const pay=l==1?500:l==2?1000:pick([1000,2000]);
+ const price=l==1?rnd(1,4)*100:l==2?rnd(2,17)*50:rnd(21,pay/5-1)*5;const ans=pay-price,st=[100,50,25,10,5][l-1];
+ const s=new Set([eur(ans)]);let g=0;while(s.size<3&&g++<60){const v=ans+rnd(-3,3)*st;if(v>0)s.add(eur(v))}
+ return{t:'En la tienda',q:'Algo cuesta '+eur(price)+'. Pagas con '+eur(pay)+'. ¿Cuánto te devuelven?',o:shuf([...s]),a:eur(ans)}}
+function genSerie(l){let a=rnd(1,10),s,seq;const R=[0,1,2,3,4];
+ if(l==1){s=rnd(1,3);seq=R.map(i=>a+i*s)}
+ else if(l==2){s=rnd(2,9)*(Math.random()<.3?-1:1);if(s<0)a=rnd(40,60);seq=R.map(i=>a+i*s)}
+ else if(Math.random()<.5){a=rnd(1,4);seq=R.map(i=>a*2**i)}
+ else{const s1=rnd(1,4),s2=rnd(1,4);seq=[a];for(let i=1;i<5;i++)seq.push(seq[i-1]+(i%2?s1:s2))}
+ return{t:'¿Qué número sigue en la serie?',q:seq.slice(0,4).join(' , ')+' , ?',o:numOpts(seq[4],l==1?3:6),a:String(seq[4])}}
+const GR={Frutas:['Manzana','Plátano','Naranja','Pera','Uva'],Animales:['Perro','Gato','Caballo','Vaca','Gallina'],Transportes:['Coche','Tren','Avión','Barco','Bicicleta'],Muebles:['Silla','Mesa','Sofá','Armario','Cama'],Ropa:['Camisa','Falda','Abrigo','Pantalón','Calcetín'],Herramientas:['Martillo','Sierra','Taladro','Alicates','Destornillador'],Instrumentos:['Guitarra','Piano','Violín','Tambor','Flauta'],Verduras:['Tomate','Lechuga','Zanahoria','Cebolla','Pimiento'],Profesiones:['Médico','Maestro','Panadero','Carpintero','Cocinero']};
+function genIntruso(l){const k=shuf(Object.keys(GR)),A=shuf(GR[k[0]]).slice(0,l+1),B=pick(GR[k[1]]);return{t:'Fíjate bien',q:'¿Cuál NO pertenece al grupo?',o:shuf([...A,B]),a:B}}
+const OR=[["Poner el pan en la tostadora","Untar la mantequilla","Comerse la tostada"],["Meter la ropa en la lavadora","Poner el jabón y el programa","Tender la ropa"],["Hacer la lista de la compra","Ir al supermercado","Guardar la compra en la nevera"],["Pedir cita con el médico","Ir a la consulta","Tomar la medicina recetada"],["Pelar las patatas","Freírlas","Servirlas en el plato"],["Plantar la semilla","Regar la planta","Cortar la flor"],["Escribir la carta","Echarla al buzón","Recibir la respuesta"],["Encender el horno","Meter el pastel","Sacar el pastel"],["Abrir el paraguas","Caminar bajo la lluvia","Secar el paraguas"],["Poner la mesa","Comer en familia","Fregar los platos"],["Llenar la bañera","Darse un baño","Secarse con la toalla"],["Comprar el billete","Subir al tren","Bajar en la estación"]];
+function genOrden(l){const t=pick(OR),i=[0,2,1][l-1];return{t:'Piensa en el orden de la rutina',q:['¿Qué se hace primero?','¿Qué se hace al final?','¿Qué se hace en medio?'][l-1],o:shuf(t),a:t[i]}}
+const RF=[["A caballo regalado no le mires el ___","diente","pelo","ojo"],["Más vale pájaro en mano que ciento ___","volando","cantando","comiendo"],["No hay mal que por bien no ___","venga","llegue","sea"],["Al mal tiempo, buena ___","cara","ropa","suerte"],["Quien bien te quiere te hará ___","llorar","reír","caer"],["En casa del herrero, cuchillo de ___","palo","hierro","plata"],["A quien madruga, Dios le ___","ayuda","bendice","premia"],["Camarón que se duerme, se lo lleva la ___","corriente","marea","ola"],["Dime con quién andas y te diré ___ eres","quién","cómo","dónde"],["Ojos que no ven, corazón que no ___","siente","llora","duele"],["El que mucho abarca, poco ___","aprieta","agarra","coge"],["Más vale tarde que ___","nunca","pronto","mal"],["Perro ladrador, poco ___","mordedor","comedor","cantor"],["Cuando el río suena, agua ___","lleva","trae","tiene"],["Hecha la ley, hecha la ___","trampa","norma","regla"],["Árbol que nace torcido, jamás su tronco ___","endereza","corta","mueve"],["Mal de muchos, consuelo de ___","tontos","pobres","todos"],["Entre col y col, lechuga. Pero más vale ___","callar","correr","pagar"],["De tal palo, tal ___","astilla","leña","rama"],["Una golondrina no hace ___","verano","nido","ruido"],["A buen hambre, no hay pan ___","duro","malo","frío"],["No por mucho madrugar amanece más ___","temprano","claro","pronto"]];
+function genRef(){const r=pick(RF);return{t:'Completa el refrán',q:r[0].replace('___','…'),o:shuf(r.slice(1)),a:r[1]}}
+const W=['MESA','CASA','PLAYA','GATO','FLOR','NARANJA','VENTANA','JARDÍN','COCINA','FAMILIA','CAMINO','MONTAÑA','PESCADO','MERCADO','ABUELO','GUITARRA','HOSPITAL','CHOCOLATE','TELÉFONO','PRIMAVERA','ABUELA','ESCUELA','CARRETERA','BICICLETA'];
+function genLetras(l){const p=W.filter(w=>l==1?w.length<=5:l==2?w.length>=6&&w.length<=7:w.length>=8),w=pick(p);let s;do{s=shuf([...w]).join('')}while(s==w);
+ return{t:'Ordena las letras. ¿Qué palabra es?',q:[...s].join(' '),o:shuf([w,...shuf(W.filter(x=>x!=w)).slice(0,2)]),a:w}}
+
+function genCompra(l){const n=[2,3,3,4,5][l-1],N=shuf(['Pan','Leche','Huevos','Café','Fruta','Jabón','Aceite','Pescado']).slice(0,n),st=l==1?100:50,P=N.map(()=>rnd(1,l>=3?10:6)*st),t=P.reduce((s,x)=>s+x,0),s=new Set([eur(t)]);let g=0;while(s.size<3&&g++<60){const v=t+rnd(-3,3)*st;if(v>0)s.add(eur(v))}
+ return{t:'En el supermercado',q:N.map((x,i)=>x+' '+eur(P[i])).join('<br>')+'<br>¿Cuánto es en total?',o:shuf([...s]),a:eur(t)}}
+const DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],ES=['invierno','primavera','verano','otoño'],cap=s=>s[0].toUpperCase()+s.slice(1);
+function genOrient(){const d=new Date(),k=rnd(0,3),y=d.getFullYear(),es=[0,0,1,1,1,2,2,2,3,3,3,0][d.getMonth()];
+ if(k==3)return{t:'Orientación',q:'¿En qué año estamos?',o:numOpts(y,2),a:String(y)};
+ const T=[['¿En qué día de la semana estamos?',DS,d.getDay()],['¿En qué mes estamos?',MS,d.getMonth()],['¿En qué estación estamos?',ES,es]][k],A=T[1][T[2]];
+ return{t:'Orientación',q:T[0],o:shuf([A,...shuf(T[1].filter(x=>x!=A)).slice(0,2)]).map(cap),a:cap(A)}}
+/* ---------- Motor de preguntas ---------- */
+function runQuiz(a){
+ const my=++V;let l=store.levels[a.id]||1,r=0,ok=0,sk=0,ms=0,c,tries;const N=6;
+ function nxt(){if(r>=N){store.levels[a.id]=l;return endScreen(a,ok>=N-1?3:ok>=3?2:1,ok+' de '+N+' a la primera',()=>a.rep?a.rep():runQuiz(a))}c=a.gen(l);tries=0;draw()}
+ function draw(){
+  const fb=h('div','fb'),box=h('div'),nb=btn('Siguiente →',()=>{r++;nxt()});nb.style.display='none';
+  const lock=()=>box.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+  c.o.forEach(o=>{const b=h('button','opt',o);b.onclick=()=>{
+   if(o===c.a){b.classList.add('good');lock();fb.textContent=tries?'Muy bien, ya lo tienes 👏':'¡Muy bien! 🎉';
+    if(!tries){ok++;sk++;ms=0;if(sk>=3&&l<(a.max||3)){l++;sk=0}}nb.style.display=''}
+   else{tries++;b.disabled=true;b.classList.add('dim');
+    if(tries==1){sk=0;ms++;if(ms>=2&&l>1){l--;ms=0}}
+    if(tries>=2){lock();[...box.children].forEach(x=>{if(x.textContent===c.a)x.classList.add('good')});fb.textContent='Era esta. ¡Vamos con la siguiente!';nb.style.display=''}
+    else fb.textContent='Casi. Inténtalo otra vez 🙂'}};box.append(b)});
+  const tx=c.t+'. '+c.q.replace(/<br>/g,', ').replace('…',', qué falta,')+'. Opciones: '+c.o.join(', ');if(store.set.voice)say(tx);
+  show(topbar('Pregunta '+(r+1)+' de '+N),h('button','say','🔊',()=>say(tx)),h('div','t',c.t),h('div','q',c.q),box,fb,nb)}
+ nxt()}
+
+/* ---------- Parejas ---------- */
+function runPairs(a){
+ const my=++V;let l=store.levels.pairs||1;const np=[3,4,6,8,10][l-1];
+ const E=shuf(['🍎','🐶','🌸','🚗','🏠','⭐','🎈','🐟','🍋','🦋']).slice(0,np),deck=shuf([...E,...E]);
+ let open=[],done=0,tries=0,lock=false;
+ const info=h('div','fb','Descubre dos cartas iguales'),g=h('div','cards');g.style.gridTemplateColumns='repeat('+(np==3?3:4)+',1fr)';
+ deck.forEach(e=>{const b=h('button','mem','?');b.onclick=async()=>{
+  if(lock||b.dataset.f)return;b.dataset.f=1;b.textContent=e;b.classList.add('up');open.push([b,e]);
+  if(open.length==2){tries++;lock=true;await sleep(1000);if(V!==my)return;
+   if(open[0][1]==open[1][1]){open.forEach(o=>{o[0].classList.remove('up');o[0].classList.add('ok')});done++;info.textContent='¡Pareja encontrada! 🎉'}
+   else{open.forEach(o=>{o[0].textContent='?';delete o[0].dataset.f;o[0].classList.remove('up')});info.textContent='Casi. Sigue probando 🙂'}
+   open=[];lock=false;
+   if(done==np){await sleep(800);if(V!==my)return;
+    if(tries<=np*2&&l<5)l++;else if(tries>np*4&&l>1)l--;store.levels.pairs=l;
+    endScreen(a,tries<=np*2?3:tries<=np*3?2:1,tries+' intentos',()=>runPairs(a))}}};g.append(b)});
+ show(topbar(),h('div','t','Encuentra las '+np+' parejas'),info,g)}
+
+/* ---------- Secuencia ---------- */
+function runSeq(a){
+ const my=++V;let l=store.levels.seq||1,r=0,ok=0,sk=0,ms=0;const N=5;
+ const col=['#e53e3e','#38a169','#3182ce','#d69e2e'],msg=h('div','fb'),ctr=h('div','t'),pads=h('div','pads');
+ const P=col.map(c=>{const b=h('button','pad');b.style.background=c;pads.append(b);return b});
+ show(topbar(),ctr,msg,pads);
+ async function round(){
+  const len=l+1+Math.floor(r/2),seq=Array.from({length:len},()=>rnd(0,3));let tries=0;
+  while(true){
+   ctr.textContent='Ronda '+(r+1)+' de '+N;msg.textContent='Mira con atención 👀';P.forEach(p=>{p.disabled=true;p.onclick=null});
+   await sleep(900);
+   for(const i of seq){if(V!==my)return;P[i].classList.add('on');await sleep(650);P[i].classList.remove('on');await sleep(250)}
+   if(V!==my)return;msg.textContent='Tu turno: repite el orden';
+   const res=await new Promise(done=>{let k=0;P.forEach((p,i)=>{p.disabled=false;p.onclick=()=>{
+    if(V!==my)return;p.classList.add('on');setTimeout(()=>p.classList.remove('on'),200);
+    if(i!==seq[k]){P.forEach(q=>q.onclick=null);done(false);return}
+    if(++k==seq.length){P.forEach(q=>q.onclick=null);done(true)}}})});
+   if(V!==my)return;
+   if(res){msg.textContent='¡Muy bien! 🎉';break}
+   if(++tries>=2){msg.textContent='No pasa nada, vamos con la siguiente';break}
+   msg.textContent='Casi. Mira otra vez 🙂';await sleep(1300)}
+  if(tries==0){ok++;sk++;ms=0;if(sk>=2&&l<5){l++;sk=0}}else{sk=0;ms++;if(ms>=2&&l>1){l--;ms=0}}
+  await sleep(1400);if(V!==my)return;r++;
+  if(r>=N){store.levels.seq=l;endScreen(a,ok>=4?3:ok>=2?2:1,ok+' de '+N+' a la primera',()=>runSeq(a))}else round()}
+ round()}
+
+const WP=['Pan','Mesa','Luna','Perro','Silla','Rosa','Nube','Reloj','Coche','Sol','Llave','Barco','Libro','Gato','Taza','Árbol','Pera','Vaso','Puerta','Isla','Pájaro','Mano'];
+function runWords(a){++V;const l=store.levels.words||1,w=shuf(WP),L=w.slice(0,l+2),rest=w.slice(l+2);let k=0;
+ const b={id:'words',name:a.name,rep:()=>runWords(a),max:5,gen:()=>{const c=L[k++%L.length];return{t:'¿Recuerdas la lista?',q:'¿Cuál de estas palabras estaba en la lista?',o:shuf([c,...shuf(rest).slice(0,2)]),a:c}}};
+ show(topbar(),h('div','t','Memoriza estas palabras'),h('div','q',L.join('<br>')),btn('Ya las tengo',()=>runQuiz(b)))}
+const OP=[['🍎','🍅'],['🐶','🐺'],['🌹','🌷'],['🍋','🍌'],['🔴','🟠'],['😀','😃'],['⭐','🌟'],['🚗','🚙']];
+function runOdd(a){const my=++V;let l=store.levels.odd||1,r=0,ok=0;const N=5;
+ function rd(){if(r>=N){store.levels.odd=l;return endScreen(a,ok>=4?3:ok>=2?2:1,ok+' de '+N+' a la primera',()=>runOdd(a))}
+  const n=[3,4,5,6,7][l-1],p=shuf(pick(OP)),x=rnd(0,n*n-1),g=h('div','odd'),fb=h('div','fb','Toca el dibujo diferente');g.style.gridTemplateColumns='repeat('+n+',1fr)';let tr=0;
+  for(let i=0;i<n*n;i++){const b=h('button','',i==x?p[1]:p[0]);b.onclick=()=>{if(i==x){fb.textContent='¡Muy bien! 🎉';if(!tr){ok++;if(l<5&&ok>=l+1)l++}g.querySelectorAll('button').forEach(y=>y.disabled=true);setTimeout(()=>{if(V==my){r++;rd()}},1100)}else{tr++;b.disabled=true;fb.textContent='Casi. Sigue buscando 🙂'}};g.append(b)}
+  show(topbar('Ronda '+(r+1)+' de '+N),g,fb)}
+ rd()}
+function runFotos(){++V;if(!FO.length)return show(topbar(),h('div','q','Aún no hay fotos'),h('p','t','Añádelas desde «Para la familia».'),btn('Para la familia',fam));
+ let d=shuf(FO),i=0;
+ (function s(){const f=d[i%d.length],el=[topbar()];if(f.img){const m=h('img','ph');m.src=f.img;el.push(m)}
+  const an=h('div','fb','');el.push(h('div','q',f.q||'¿Qué recuerdas de esta foto?'),an);
+  if(f.a)el.push(btn('Ver la respuesta',()=>{an.textContent=f.a},'sec'));
+  el.push(btn('Otra foto',()=>{i++;s()}));if(SES)el.push(btn('Terminar ✔',nextSes,'sec'));show(...el)})()}
+let SES=null;
+function startSes(){const pk=c=>{const L=ACTS.filter(x=>x.cat==c&&(x.id!='fotos'||FO.length)),av=x=>{const g=store.log.filter(y=>y.id==x.id);return g.length?g.reduce((s,y)=>s+y.st,0)/g.length:0},m=Math.min(...L.map(av));return pick(L.filter(x=>av(x)==m))};
+ SES={list:[pk(pick(['Cálculo','Lógica'])),pk(pick(['Memoria','Lenguaje','Atención'])),pk('Charlar')],i:0};nextSes()}
+function nextSes(){if(!SES)return home();if(SES.i>=SES.list.length){SES=null;++V;return show(h('div','stars','🌟'),h('div','q','¡Sesión completada! Hasta mañana.'),h('p','t','Has hecho un gran trabajo.'),btn('Volver al inicio',()=>home()))}const a=SES.list[SES.i];a.run(a)}
+function addFoto(file,q,a,done){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,520/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);FO.push({img:c.toDataURL('image/jpeg',.6),q,a});done(saveF())};im.src=fr.result};fr.readAsDataURL(file)}
+function fam(){++V;const el=[topbar(),h('h1','','Para la familia'),h('h2','','Tamaño de letra')],r1=h('div','grid');
+ [['Normal',1],['Grande',1.2],['Muy grande',1.4]].forEach(([n,v])=>r1.append(h('button','tile',(store.set.fs==v?'✔ ':'')+n,()=>{store.set.fs=v;save();fam()})));
+ el.push(r1,h('h2','','Voz'),btn(store.set.voice?'Leer en voz alta: SÍ':'Leer en voz alta: NO',()=>{store.set.voice=store.set.voice?0:1;save();fam()},'sec'),h('h2','','Mis fotos y preguntas'),h('p','mut','Sube fotos de la familia, del pueblo o de viajes y escribe una pregunta. Se guardan solo en este dispositivo.'));
+ const fi=h('input','inp'),qi=h('input','inp'),ai=h('input','inp'),ms=h('div','fb');fi.type='file';fi.accept='image/*';qi.placeholder='Pregunta (ej. ¿Quién es? ¿Dónde fue?)';ai.placeholder='Respuesta (opcional)';
+ el.push(fi,qi,ai,btn('Añadir',()=>{const f=fi.files[0],q=qi.value.trim(),a=ai.value.trim();if(!f&&!q){ms.textContent='Pon una foto o una pregunta';return}
+  const ok=()=>{ms.textContent='¡Añadido! ✔';setTimeout(fam,700)},fail=()=>{FO.pop();ms.textContent='No cabe más. Borra alguna foto.'};
+  if(f)addFoto(f,q,a,k=>k?ok():fail());else{FO.push({q,a});saveF()?ok():fail()}}),ms);
+ FO.forEach((f,i)=>{const row=h('div','row',(f.img?'🖼️ ':'')+(f.q||'(sin pregunta)'));row.append(h('button','lnk',' · Borrar',()=>{FO.splice(i,1);saveF();fam()}));el.push(row)});
+ const ta=h('textarea','inp');ta.rows=3;ta.placeholder='Aquí aparecerá la copia, o pega una para restaurar';
+ el.push(h('h2','','Copia de seguridad'),h('p','mut','Guarda el progreso y los ajustes (no incluye las fotos).'),ta,
+  btn('Crear copia',()=>{ta.value=JSON.stringify({levels:store.levels,log:store.log,set:store.set});ta.select()},'sec'),
+  btn('Restaurar',()=>{try{const o=JSON.parse(ta.value);store={levels:o.levels||{},log:o.log||[],set:o.set||store.set};save();home()}catch(e){ms.textContent='La copia no es válida'}},'sec'),
+  btn('Ver progreso',progress,'sec'));show(...el)}
+const SP=['MESA','CASA','FLOR','GATO','PLAYA','LUNA','ROSA','PERRO','SILLA','LIBRO','NUBE','RELOJ','COCHE','LLAVE','BARCO','TAZA','NIETO','CAMPO'];
+function runSopa(a){const my=++V;let l=store.levels.sopa||1;const n=[6,7,8][l-1],G=Array.from({length:n},()=>Array(n).fill('')),ws=[];
+ for(const w of shuf(SP)){if(ws.length>=l+2)break;for(let t=0;t<40;t++){const v=Math.random()<.5,r=rnd(0,v?n-w.length:n-1),c=rnd(0,v?n-1:n-w.length);
+  if([...w].every((ch,i)=>{const x=G[v?r+i:r][v?c:c+i];return!x||x==ch})){[...w].forEach((ch,i)=>{G[v?r+i:r][v?c:c+i]=ch});ws.push(w);break}}}
+ const AB='ABCDEFGHIJLMNOPRSTUV';G.forEach(row=>row.forEach((x,j)=>{if(!x)row[j]=AB[rnd(0,AB.length-1)]}));
+ let sel=null,tr=0;const fd=new Set(),B=[],g=h('div','odd'),fb=h('div','fb','Toca la primera y la última letra de cada palabra'),wl=h('div','t');g.style.gridTemplateColumns='repeat('+n+',1fr)';
+ const upd=()=>{wl.innerHTML=ws.map(w=>fd.has(w)?'✔ <s>'+w+'</s>':w).join(' · ')};upd();
+ G.forEach((row,i)=>row.forEach((ch,j)=>{const b=h('button','',ch);b.style.fontSize=n>6?'24px':'28px';B.push(b);b.onclick=()=>{
+  if(!sel){sel=[i,j];b.classList.add('sel');return}
+  const[r,c]=sel;sel=null;B.forEach(x=>x.classList.remove('sel'));
+  if(r!=i&&c!=j){fb.textContent='Casi. Elige letras en línea recta 🙂';tr++;return}
+  const cells=[];for(let p=Math.min(r,i);p<=Math.max(r,i);p++)for(let q=Math.min(c,j);q<=Math.max(c,j);q++)cells.push([p,q]);
+  const s=cells.map(([p,q])=>G[p][q]).join(''),w=ws.find(x=>!fd.has(x)&&(x==s||x==[...s].reverse().join('')));
+  if(w){fd.add(w);cells.forEach(([p,q])=>B[p*n+q].classList.add('ok'));fb.textContent='¡Muy bien! 🎉';upd();
+   if(fd.size==ws.length)setTimeout(()=>{if(V!==my)return;if(tr<=2&&l<3)l++;else if(tr>6&&l>1)l--;store.levels.sopa=l;endScreen(a,tr<=2?3:tr<=5?2:1,ws.length+' palabras, '+tr+' fallos',()=>runSopa(a))},900)}
+  else{tr++;fb.textContent='Casi. Prueba otra vez 🙂'}};g.append(b)}));
+ show(topbar(),wl,g,fb)}
+/* ---------- Charlar ---------- */
+const CV=["¿Cuál es tu recuerdo más bonito de la infancia?","¿Cómo era la casa donde creciste?","¿Cuál era tu comida favorita de pequeña? ¿Quién la cocinaba?","¿Qué canción te recuerda a tu juventud?","Cuéntame cómo conociste a papá.","¿Qué hacías en verano cuando eras joven?","¿Cuál ha sido el viaje que más te ha gustado?","¿Qué fiesta o tradición te gustaba más de pequeña?","¿Qué juegos jugabas con tus amigas?","¿Quién fue tu mejor amiga y qué hacíais juntas?","¿Qué receta de la familia te gustaría que no se perdiera?","¿Cuál fue tu primer trabajo?","¿Qué es lo que más te gusta de tus nietos o de la familia?","¿Qué plato te sale mejor? ¿Cómo se prepara?","¿Cómo era un día normal de colegio para ti?","¿Qué te gustaba hacer los domingos?","¿Cuál es tu rincón favorito de tu casa y por qué?","¿Qué película te gustó más y por qué?","¿Cómo celebrabais los cumpleaños cuando eras pequeña?","¿Qué oficio te hubiera gustado tener?","¿Qué consejo le darías a tus nietos?","¿Qué olores o sabores te recuerdan a tu infancia?","¿Cómo era tu barrio o tu calle de joven?","¿Qué te hace reír más que nada?","¿Qué es lo que más echas de menos de tu juventud?"];
+function runConv(){let d=shuf(CV),i=0;++V;
+ (function s(){show(topbar(),h('div','t','Para charlar juntos, sin prisa'),h('div','q',d[i%d.length]),h('p','t','No hay respuestas correctas. Lo importante es conversar.'),btn('Otra pregunta',()=>{i++;s()}),...(SES?[btn('Terminar ✔',nextSes,'sec')]:[]))})()}
+
+/* ---------- Final y progreso ---------- */
+function endScreen(a,st,tx,again){
+ const e={d:today(),id:a.id,st,tx},md=h('div','mood');store.log.push(e);store.log=store.log.slice(-80);save();
+ ['😊','😐','😟'].forEach(m=>md.append(h('button','',m,()=>{e.m=m;save();md.textContent='Gracias 💛'})));
+ show(topbar(),h('div','stars','⭐'.repeat(st)),h('div','q',['¡Buen intento! Cada vez cuenta.','¡Muy bien hecho!','¡Excelente trabajo!'][st-1]),h('div','fb',tx),h('div','t','¿Cómo te has sentido?'),md,...(SES?[btn('Siguiente →',()=>{SES.i++;nextSes()})]:[btn('Repetir',again),btn('Elegir otra actividad',()=>home(),'sec')]))}
+function progress(){++V;let sure=false;
+ const rows=store.log.slice().reverse().slice(0,15).map(x=>{const a=ACTS.find(y=>y.id==x.id);return h('div','row',x.d+' · '+(a?a.name:x.id)+' · '+'⭐'.repeat(x.st)+' ('+x.tx+') '+(x.m||''))});
+ const del=btn('Borrar historial',()=>{if(!sure){sure=true;del.textContent='¿Seguro? Pulsa otra vez';return}store={levels:{},log:[]};save();home()},'sec');
+ show(topbar(),h('h1','','Progreso'),h('h2','','Última semana'),...[6,5,4,3,2,1,0].map(i=>{const d=new Date(Date.now()-i*864e5).toLocaleDateString('sv');return h('div','row',d.slice(5)+' '+'▮'.repeat(store.log.filter(x=>x.d==d).length))}),h('h2','','Nivel actual'),...ACTS.filter(x=>store.levels[x.id]).map(x=>h('div','row',x.ic+' '+x.name+': nivel '+store.levels[x.id])),h('h2','','Últimas actividades'),...(rows.length?rows:[h('p','mut','Todavía no hay actividades.')]),del)}
+
+const CATS=['Cálculo','Lógica','Memoria','Atención','Lenguaje','Charlar'];
+const Q=runQuiz;
+const ACTS=[
+{id:'suma',ic:'➕',name:'Sumas',cat:'Cálculo',gen:genSuma,run:Q,max:5},
+{id:'resta',ic:'➖',name:'Restas',cat:'Cálculo',gen:genResta,run:Q,max:5},
+{id:'cambio',ic:'💶',name:'Dar el cambio',cat:'Cálculo',gen:genCambio,run:Q,max:5},
+{id:'compra',ic:'🛒',name:'La compra',cat:'Cálculo',gen:genCompra,run:Q,max:5},
+{id:'serie',ic:'🔢',name:'Series de números',cat:'Lógica',gen:genSerie,run:Q,max:5},
+{id:'intruso',ic:'🧩',name:'El intruso',cat:'Lógica',gen:genIntruso,run:Q},
+{id:'orden',ic:'📋',name:'Rutinas: el orden',cat:'Lógica',gen:genOrden,run:Q},
+{id:'pairs',ic:'🃏',name:'Parejas',cat:'Memoria',run:runPairs},
+{id:'seq',ic:'🎨',name:'Repite la secuencia',cat:'Memoria',run:runSeq},
+{id:'words',ic:'📝',name:'Recordar palabras',cat:'Memoria',run:runWords},
+{id:'odd',ic:'🔍',name:'El dibujo diferente',cat:'Atención',run:runOdd},
+{id:'orient',ic:'📅',name:'¿Qué día es hoy?',cat:'Atención',gen:genOrient,run:Q},
+{id:'fotos',ic:'🖼️',name:'Mis fotos',cat:'Charlar',run:runFotos},
+{id:'sopa',ic:'🔠',name:'Sopa de letras',cat:'Lenguaje',run:runSopa},
+{id:'ref',ic:'📜',name:'Refranes',cat:'Lenguaje',gen:genRef,run:Q},
+{id:'letras',ic:'🔤',name:'Letras desordenadas',cat:'Lenguaje',gen:genLetras,run:Q},
+{id:'conv',ic:'💬',name:'Preguntas para charlar',cat:'Charlar',run:runConv}];
+
+function home(){
+ ++V;SES=null;const n=store.log.filter(x=>x.d===today()).length;
+ const els=[h('div','logo','<svg viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Mente activa"><rect width="64" height="64" rx="16" style="fill:var(--ac)"/><g style="fill:none;stroke:var(--acfg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 18v28"/><path d="M32 22c-3-6-13-5-14 2-5 1-6 8-1 10-2 5 2 10 8 9 3 2 7 1 7-3"/><path d="M32 22c3-6 13-5 14 2 5 1 6 8 1 10 2 5-2 10-8 9-3 2-7 1-7-3"/></g><circle cx="49" cy="13" r="3.5" fill="#f6c453"/></svg><h1>Mente activa</h1>'),h('p','mut',n>=3?'¡Gran trabajo hoy! Ya llevas '+n+' actividades.':n>0?'Hoy llevas '+n+' actividad'+(n>1?'es':'')+'. ¡A tu ritmo!':'Elige lo que te apetezca. Sin prisa y sin presión.')];
+ els.push(btn('▶ Sesión de hoy',startSes));CATS.forEach(c=>{els.push(h('h2','',c));const g=h('div','grid');ACTS.filter(a=>a.cat===c).forEach(a=>g.append(h('button','tile','<b>'+a.ic+'</b>'+a.name,()=>a.run(a))));els.push(g)});
+ els.push(h('div','',''),btn('Ver progreso',progress,'sec'),btn('Para la familia',fam,'sec'),h('p','foot','Ejercicios de estimulación cognitiva para el día a día. No sustituyen la valoración de su médico o neuropsicólogo.'));
+ show(...els)}
+home();
+</script></body></html>
