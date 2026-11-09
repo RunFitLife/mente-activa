@@ -24,3 +24,8 @@ Los datos (progreso, ajustes y fotos) se guardan solo en el navegador del dispos
 ## Aviso
 
 Son ejercicios de estimulación para el día a día. No sustituyen la valoración de un médico o neuropsicólogo.
+
+## Archivos del repositorio
+
+- `index.html`: la aplicación
+- `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`: permiten instalarla en la pantalla de inicio y usarla sin conexión

@@ -2,6 +2,7 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mente activa</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#2b6cb0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--bg:#f6f3ec;--fg:#1f2a37;--card:#fff;--line:#d9d2c3;--ac:#2b6cb0;--acfg:#fff;--ok:#2f855a;--okbg:#e3f4ea;--mut:#5b6573;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#14181f;--fg:#e8edf3;--card:#1e2530;--line:#3a4452;--ac:#63b3ed;--acfg:#0b1220;--ok:#68d391;--okbg:#1f3a2c;--mut:#a0aec0}}
@@ -93,18 +94,18 @@ function genOrient(){const d=new Date(),k=rnd(0,3),y=d.getFullYear(),es=[0,0,1,1
  return{t:'Orientación',q:T[0],o:shuf([A,...shuf(T[1].filter(x=>x!=A)).slice(0,2)]).map(cap),a:cap(A)}}
 /* ---------- Motor de preguntas ---------- */
 function runQuiz(a){
- const my=++V;let l=store.levels[a.id]||1,r=0,ok=0,sk=0,ms=0,c,tries;const N=6;
- function nxt(){if(r>=N){store.levels[a.id]=l;return endScreen(a,ok>=N-1?3:ok>=3?2:1,ok+' de '+N+' a la primera',()=>a.rep?a.rep():runQuiz(a))}c=a.gen(l);tries=0;draw()}
+ const my=++V;let l=store.levels[a.id]||1,r=0,ok=0,sk=0,ms=0,cm=0,c,tries;const N=6;
+ function nxt(){if(r>=N){store.levels[a.id]=l;return endScreen(a,ok>=N-1?3:ok>=3?2:1,ok+' de '+N+' a la primera',()=>a.rep?a.rep():runQuiz(a))}if(cm>=3){cm=0;return show(topbar(),h('div','q','Vamos con calma 😊'),h('p','t','Si estás cansada, podemos dejarlo para luego.'),btn('Seguir',()=>{c=a.gen(l);tries=0;draw()}),btn('Descansar',()=>home(),'sec'))}c=a.gen(l);tries=0;draw()}
  function draw(){
   const fb=h('div','fb'),box=h('div'),nb=btn('Siguiente →',()=>{r++;nxt()});nb.style.display='none';
   const lock=()=>box.querySelectorAll('.opt').forEach(x=>x.disabled=true);
   c.o.forEach(o=>{const b=h('button','opt',o);b.onclick=()=>{
    if(o===c.a){b.classList.add('good');lock();fb.textContent=tries?'Muy bien, ya lo tienes 👏':'¡Muy bien! 🎉';
-    if(!tries){ok++;sk++;ms=0;if(sk>=3&&l<(a.max||3)){l++;sk=0}}nb.style.display=''}
+    if(!tries){ok++;sk++;ms=0;cm=0;if(sk>=3&&l<(a.max||3)){l++;sk=0}}nb.style.display=''}
    else{tries++;b.disabled=true;b.classList.add('dim');
-    if(tries==1){sk=0;ms++;if(ms>=2&&l>1){l--;ms=0}}
+    if(tries==1){sk=0;ms++;cm++;if(ms>=2&&l>1){l--;ms=0}}
     if(tries>=2){lock();[...box.children].forEach(x=>{if(x.textContent===c.a)x.classList.add('good')});fb.textContent='Era esta. ¡Vamos con la siguiente!';nb.style.display=''}
-    else fb.textContent='Casi. Inténtalo otra vez 🙂'}};box.append(b)});
+    else{const w=[...box.children].filter(x=>!x.disabled&&x.textContent!==c.a);fb.textContent=w.length>1?'Casi. Te quito una opción 🙂':'Casi. Inténtalo otra vez 🙂';if(w.length>1){w[0].disabled=true;w[0].classList.add('dim')}}}};box.append(b)});
   const tx=c.t+'. '+c.q.replace(/<br>/g,', ').replace('…',', qué falta,')+'. Opciones: '+c.o.join(', ');if(store.set.voice)say(tx);
   show(topbar('Pregunta '+(r+1)+' de '+N),h('button','say','🔊',()=>say(tx)),h('div','t',c.t),h('div','q',c.q),box,fb,nb)}
  nxt()}
@@ -183,9 +184,9 @@ function fam(){++V;const el=[topbar(),h('h1','','Para la familia'),h('h2','','Ta
   if(f)addFoto(f,q,a,k=>k?ok():fail());else{FO.push({q,a});saveF()?ok():fail()}}),ms);
  FO.forEach((f,i)=>{const row=h('div','row',(f.img?'🖼️ ':'')+(f.q||'(sin pregunta)'));row.append(h('button','lnk',' · Borrar',()=>{FO.splice(i,1);saveF();fam()}));el.push(row)});
  const ta=h('textarea','inp');ta.rows=3;ta.placeholder='Aquí aparecerá la copia, o pega una para restaurar';
- el.push(h('h2','','Copia de seguridad'),h('p','mut','Guarda el progreso y los ajustes (no incluye las fotos).'),ta,
-  btn('Crear copia',()=>{ta.value=JSON.stringify({levels:store.levels,log:store.log,set:store.set});ta.select()},'sec'),
-  btn('Restaurar',()=>{try{const o=JSON.parse(ta.value);store={levels:o.levels||{},log:o.log||[],set:o.set||store.set};save();home()}catch(e){ms.textContent='La copia no es válida'}},'sec'),
+ el.push(h('h2','','Copia de seguridad'),h('p','mut','Guarda el progreso, los ajustes y las fotos. Si hay muchas fotos, el texto será largo.'),ta,
+  btn('Crear copia',()=>{ta.value=JSON.stringify({levels:store.levels,log:store.log,set:store.set,fotos:FO});ta.select()},'sec'),
+  btn('Restaurar',()=>{try{const o=JSON.parse(ta.value);store={levels:o.levels||{},log:o.log||[],set:o.set||store.set};if(o.fotos){FO=o.fotos;saveF()}save();home()}catch(e){ms.textContent='La copia no es válida'}},'sec'),
   btn('Ver progreso',progress,'sec'));show(...el)}
 const SP=['MESA','CASA','FLOR','GATO','PLAYA','LUNA','ROSA','PERRO','SILLA','LIBRO','NUBE','RELOJ','COCHE','LLAVE','BARCO','TAZA','NIETO','CAMPO'];
 function runSopa(a){const my=++V;let l=store.levels.sopa||1;const n=[6,7,8][l-1],G=Array.from({length:n},()=>Array(n).fill('')),ws=[];
@@ -205,7 +206,7 @@ function runSopa(a){const my=++V;let l=store.levels.sopa||1;const n=[6,7,8][l-1]
   else{tr++;fb.textContent='Casi. Prueba otra vez 🙂'}};g.append(b)}));
  show(topbar(),wl,g,fb)}
 /* ---------- Charlar ---------- */
-const CV=["¿Cuál es tu recuerdo más bonito de la infancia?","¿Cómo era la casa donde creciste?","¿Cuál era tu comida favorita de pequeña? ¿Quién la cocinaba?","¿Qué canción te recuerda a tu juventud?","Cuéntame cómo conociste a papá.","¿Qué hacías en verano cuando eras joven?","¿Cuál ha sido el viaje que más te ha gustado?","¿Qué fiesta o tradición te gustaba más de pequeña?","¿Qué juegos jugabas con tus amigas?","¿Quién fue tu mejor amiga y qué hacíais juntas?","¿Qué receta de la familia te gustaría que no se perdiera?","¿Cuál fue tu primer trabajo?","¿Qué es lo que más te gusta de tus nietos o de la familia?","¿Qué plato te sale mejor? ¿Cómo se prepara?","¿Cómo era un día normal de colegio para ti?","¿Qué te gustaba hacer los domingos?","¿Cuál es tu rincón favorito de tu casa y por qué?","¿Qué película te gustó más y por qué?","¿Cómo celebrabais los cumpleaños cuando eras pequeña?","¿Qué oficio te hubiera gustado tener?","¿Qué consejo le darías a tus nietos?","¿Qué olores o sabores te recuerdan a tu infancia?","¿Cómo era tu barrio o tu calle de joven?","¿Qué te hace reír más que nada?","¿Qué es lo que más echas de menos de tu juventud?"];
+const CV=["¿Cuál es tu recuerdo más bonito de la infancia?","¿Cómo era la casa donde creciste?","¿Cuál era tu comida favorita de pequeña? ¿Quién la cocinaba?","¿Qué canción te recuerda a tu juventud?","¿Qué personas importantes recuerdas de tu juventud?","¿Qué hacías en verano cuando eras joven?","¿Cuál ha sido el viaje que más te ha gustado?","¿Qué fiesta o tradición te gustaba más de pequeña?","¿Qué juegos jugabas con tus amigas?","¿Quién fue tu mejor amiga y qué hacíais juntas?","¿Qué receta de la familia te gustaría que no se perdiera?","¿Cuál fue tu primer trabajo?","¿Qué es lo que más te gusta de tus nietos o de la familia?","¿Qué plato te sale mejor? ¿Cómo se prepara?","¿Cómo era un día normal de colegio para ti?","¿Qué te gustaba hacer los domingos?","¿Cuál es tu rincón favorito de tu casa y por qué?","¿Qué película te gustó más y por qué?","¿Cómo celebrabais los cumpleaños cuando eras pequeña?","¿Qué oficio te hubiera gustado tener?","¿Qué consejo le darías a tus nietos?","¿Qué olores o sabores te recuerdan a tu infancia?","¿Cómo era tu barrio o tu calle de joven?","¿Qué te hace reír más que nada?","¿Qué es lo que más echas de menos de tu juventud?"];
 function runConv(){let d=shuf(CV),i=0;++V;
  (function s(){show(topbar(),h('div','t','Para charlar juntos, sin prisa'),h('div','q',d[i%d.length]),h('p','t','No hay respuestas correctas. Lo importante es conversar.'),btn('Otra pregunta',()=>{i++;s()}),...(SES?[btn('Terminar ✔',nextSes,'sec')]:[]))})()}
 
@@ -247,4 +248,4 @@ function home(){
  els.push(h('div','',''),btn('Ver progreso',progress,'sec'),btn('Para la familia',fam,'sec'),h('p','foot','Ejercicios de estimulación cognitiva para el día a día. No sustituyen la valoración de su médico o neuropsicólogo.'));
  show(...els)}
 home();
-</script></body></html>
+</script><script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){})</script></body></html>
