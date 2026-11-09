@@ -94,7 +94,7 @@ function genOrient(){const d=new Date(),k=rnd(0,3),y=d.getFullYear(),es=[0,0,1,1
  return{t:'Orientación',q:T[0],o:shuf([A,...shuf(T[1].filter(x=>x!=A)).slice(0,2)]).map(cap),a:cap(A)}}
 /* ---------- Motor de preguntas ---------- */
 function runQuiz(a){
- const my=++V;let l=store.levels[a.id]||1,r=0,ok=0,sk=0,ms=0,cm=0,c,tries;const N=6;
+ const my=++V;let l=store.levels[a.id]||1,r=0,ok=0,sk=0,ms=0,cm=0,c,tries;const N=a.n||6;
  function nxt(){if(r>=N){store.levels[a.id]=l;return endScreen(a,ok>=N-1?3:ok>=3?2:1,ok+' de '+N+' a la primera',()=>a.rep?a.rep():runQuiz(a))}if(cm>=3){cm=0;return show(topbar(),h('div','q','Vamos con calma 😊'),h('p','t','Si estás cansada, podemos dejarlo para luego.'),btn('Seguir',()=>{c=a.gen(l);tries=0;draw()}),btn('Descansar',()=>home(),'sec'))}c=a.gen(l);tries=0;draw()}
  function draw(){
   const fb=h('div','fb'),box=h('div'),nb=btn('Siguiente →',()=>{r++;nxt()});nb.style.display='none';
@@ -205,6 +205,16 @@ function runSopa(a){const my=++V;let l=store.levels.sopa||1;const n=[6,7,8][l-1]
    if(fd.size==ws.length)setTimeout(()=>{if(V!==my)return;if(tr<=2&&l<3)l++;else if(tr>6&&l>1)l--;store.levels.sopa=l;endScreen(a,tr<=2?3:tr<=5?2:1,ws.length+' palabras, '+tr+' fallos',()=>runSopa(a))},900)}
   else{tr++;fb.textContent='Casi. Prueba otra vez 🙂'}};g.append(b)}));
  show(topbar(),wl,g,fb)}
+const LC=[
+['Lucía vive en un pueblo pequeño cerca del mar. Todas las mañanas sale a pasear con su perro Toby hasta el puerto. Allí compra pan caliente en la panadería de la esquina y saluda a los pescadores que preparan sus redes. Después vuelve a casa y desayuna en el patio.',[['¿Cómo se llama el perro de Lucía?','Toby','Pepe','Nube'],['¿Dónde compra el pan?','En la panadería de la esquina','En el supermercado','En el mercado'],['¿Dónde desayuna?','En el patio','En la cocina','En la playa']]],
+['Antonio tiene un huerto detrás de su casa. En primavera planta tomates, pimientos y lechugas. Cada tarde los riega con una regadera verde. En verano recoge los tomates más rojos y se los regala a sus vecinos, que le devuelven el favor con un bizcocho casero.',[['¿Qué hace Antonio cada tarde?','Regar las plantas','Cortar leña','Pintar la casa'],['¿Cuándo planta las verduras?','En primavera','En invierno','En otoño'],['¿Qué le regalan los vecinos?','Un bizcocho casero','Un ramo de flores','Un cesto de fruta']]],
+['Un martes de otoño, Marta y su nieta Julia fueron al mercado. Compraron manzanas, queso y un ramo de flores amarillas. Al volver, empezó a llover y se refugiaron en un portal hasta que paró. Llegaron a casa con los zapatos mojados, pero muy contentas.',[['¿Qué día fueron al mercado?','Martes','Domingo','Viernes'],['¿De qué color eran las flores?','Amarillas','Rojas','Blancas'],['¿Qué pasó al volver?','Empezó a llover','Se perdieron','Perdieron el autobús']]],
+['El tren salió de la estación a las nueve de la mañana. En el vagón viajaban una maestra con una caja de libros, un joven con una guitarra y una pareja de ancianos que volvía de visitar a su hija. Durante el viaje, el joven tocó una canción y todos aplaudieron al terminar.',[['¿A qué hora salió el tren?','A las nueve','A las diez','A las ocho'],['¿Qué llevaba el joven?','Una guitarra','Un violín','Una maleta'],['¿Qué hicieron todos al terminar la canción?','Aplaudir','Cantar','Dormirse']]],
+['La abuela Carmen prepara cada domingo un guiso de lentejas para toda la familia. Lo hace con zanahoria, cebolla y un poco de chorizo, y lo deja cocinar despacio durante casi dos horas. A la mesa se sientan siempre doce personas, y los niños son los que más repiten.',[['¿Qué prepara Carmen los domingos?','Guiso de lentejas','Paella','Sopa de pescado'],['¿Cuánto tiempo cocina el guiso?','Casi dos horas','Media hora','Toda la noche'],['¿Cuántas personas se sientan a la mesa?','Doce','Seis','Veinte']]],
+['En la plaza del barrio hay un banco de madera junto a una fuente. Cada tarde, un señor con sombrero se sienta a dar de comer a las palomas. Los niños que salen del colegio le saludan al pasar, y él siempre les responde con una sonrisa.',[['¿Qué hay junto al banco?','Una fuente','Un árbol','Un quiosco'],['¿Qué lleva puesto el señor?','Un sombrero','Una bufanda','Gafas de sol'],['¿A quién da de comer?','A las palomas','A los gatos','A los patos']]]];
+function runLectura(a){++V;const t=pick(LC),qs=t[1];let k=0;
+ const b={id:'lectura',name:a.name,n:3,rep:()=>runLectura(a),gen:()=>{const x=qs[k++%qs.length];return{t:'<span style="color:var(--fg)">'+t[0]+'</span>',q:x[0],o:shuf(x.slice(1)),a:x[1]}}};
+ show(topbar(),h('div','t','Lee con calma. Después te haré 3 preguntas, con el texto a la vista.'),h('div','q','<span style="font-size:26px;font-weight:400">'+t[0]+'</span>'),btn('🔊 Escuchar el texto',()=>say(t[0]),'sec'),btn('Ya lo he leído',()=>runQuiz(b)))}
 /* ---------- Charlar ---------- */
 const CV=["¿Cuál es tu recuerdo más bonito de la infancia?","¿Cómo era la casa donde creciste?","¿Cuál era tu comida favorita de pequeña? ¿Quién la cocinaba?","¿Qué canción te recuerda a tu juventud?","¿Qué personas importantes recuerdas de tu juventud?","¿Qué hacías en verano cuando eras joven?","¿Cuál ha sido el viaje que más te ha gustado?","¿Qué fiesta o tradición te gustaba más de pequeña?","¿Qué juegos jugabas con tus amigas?","¿Quién fue tu mejor amiga y qué hacíais juntas?","¿Qué receta de la familia te gustaría que no se perdiera?","¿Cuál fue tu primer trabajo?","¿Qué es lo que más te gusta de tus nietos o de la familia?","¿Qué plato te sale mejor? ¿Cómo se prepara?","¿Cómo era un día normal de colegio para ti?","¿Qué te gustaba hacer los domingos?","¿Cuál es tu rincón favorito de tu casa y por qué?","¿Qué película te gustó más y por qué?","¿Cómo celebrabais los cumpleaños cuando eras pequeña?","¿Qué oficio te hubiera gustado tener?","¿Qué consejo le darías a tus nietos?","¿Qué olores o sabores te recuerdan a tu infancia?","¿Cómo era tu barrio o tu calle de joven?","¿Qué te hace reír más que nada?","¿Qué es lo que más echas de menos de tu juventud?"];
 function runConv(){let d=shuf(CV),i=0;++V;
@@ -236,6 +246,7 @@ const ACTS=[
 {id:'odd',ic:'🔍',name:'El dibujo diferente',cat:'Atención',run:runOdd},
 {id:'orient',ic:'📅',name:'¿Qué día es hoy?',cat:'Atención',gen:genOrient,run:Q},
 {id:'fotos',ic:'🖼️',name:'Mis fotos',cat:'Charlar',run:runFotos},
+{id:'lectura',ic:'📖',name:'Lectura y preguntas',cat:'Lenguaje',run:runLectura},
 {id:'sopa',ic:'🔠',name:'Sopa de letras',cat:'Lenguaje',run:runSopa},
 {id:'ref',ic:'📜',name:'Refranes',cat:'Lenguaje',gen:genRef,run:Q},
 {id:'letras',ic:'🔤',name:'Letras desordenadas',cat:'Lenguaje',gen:genLetras,run:Q},
